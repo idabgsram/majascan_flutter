@@ -69,7 +69,7 @@ class QrCodeScannerActivity : AppCompatActivity() {
             val scanAreaScale = it.getStringExtra(SCAN_AREA_SCALE)?.toFloat() ?: 0.7F
             
             val scanFragment = ScanFragment.newInstance(
-                    title = intent.getStringExtra(TITLE),
+                    title = intent.getStringExtra(TITLE) ?: "",
                     hasFlashLight = hasFlashLight,
                     toolBarColor = findColorByBundle(BAR_COLOR),
                     titleColor = findColorByBundle(TITLE_COLOR),
@@ -83,7 +83,7 @@ class QrCodeScannerActivity : AppCompatActivity() {
     }
     private fun findColorByBundle(bundleKey: String): Int {
         var color = 0
-        val stringTitleColor = intent.getStringExtra(bundleKey)
+        val stringTitleColor = intent.getStringExtra(bundleKey)  ?: "" 
         if (!TextUtils.isEmpty(stringTitleColor) && stringTitleColor.indexOf("#") == 0) {
             try {
                 color = Color.parseColor(stringTitleColor)
