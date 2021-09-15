@@ -4,6 +4,9 @@ import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import com.djgeo.majascan.g_scanner.QrCodeScannerActivity
+import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -11,7 +14,14 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.common.PluginRegistry.Registrar
 
-class MajascanPlugin(val activity: Activity) : MethodCallHandler, PluginRegistry.ActivityResultListener {
+class MajascanPlugin(): MethodCallHandler, PluginRegistry.ActivityResultListener, FlutterPlugin, ActivityAware {
+
+    private var channel: MethodChannel? = null
+    private var activity: Activity? = null
+
+    constructor(activity: Activity?) : this() {
+        this.activity = activity
+    }
 
     companion object {
         @JvmStatic
@@ -45,7 +55,7 @@ class MajascanPlugin(val activity: Activity) : MethodCallHandler, PluginRegistry
                 activity.let {
                     val intent = Intent(it, QrCodeScannerActivity::class.java)
                     args?.keys?.map { key -> intent.putExtra(key, args[key]) }
-                    it.startActivityForResult(intent, Request_Scan)
+                    it?.startActivityForResult(intent, Request_Scan)
                     mResult = result
                 }
             }
@@ -67,5 +77,32 @@ class MajascanPlugin(val activity: Activity) : MethodCallHandler, PluginRegistry
             }
         }
         return false
+    }
+
+
+    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        channel = MethodChannel(binding.binaryMessenger, "majascan")
+    }
+
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        channel?.setMethodCallHandler(null)
+    }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        val plugin = MajascanPlugin(binding.activity)
+        channel?.setMethodCallHandler(plugin)
+        binding.addActivityResultListener(plugin)
+    }
+
+    override fun onDetachedFromActivity() {
+
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        onAttachedToActivity(binding)
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        onDetachedFromActivity()
     }
 }
